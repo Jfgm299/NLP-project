@@ -1,17 +1,102 @@
-research_task:
+collect_home_data:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
+    Interact with the user to collect their Home University, Degree, and the full list of subjects they need to validate.
+    Ask specifically for the exact names as they appear in the academic transcript to ensure accurate research.
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    A structured dictionary/JSON object containing:
+    {
+      "home_uni": "University Name",
+      "degree": "Degree Name",
+      "subjects": ["Subject 1", "Subject 2", ...]
+    }
+  agent: learning_coordinator
 
-reporting_task:
+research_home_syllabus:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    Using the inputs from 'collect_home_data', use the web search tool to find the official 
+    syllabus (learning outcomes, objectives, key topics) and ECTS credits for EACH subject.
+    You MUST find the official URL link to the course catalog for each subject to allow user verification.
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    A JSON array of objects. Each object must contain:
+    {
+      "subject_name": "Name",
+      "home_credits": Integer,
+      "syllabus": "Detailed text...",
+      "topics_summary": "Concise list...",
+      "home_catalog_link": "URL"
+    }
+  agent: home_university_researcher
+  context: [collect_home_data]
+
+collect_host_data:
+  description: >
+    Interact with the user to collect the list of preferred Host Universities they are considering for their Erasmus exchange.
+  expected_output: >
+    A structured dictionary: {"host_universities": ["Uni A", "Uni B"]}
+  agent: learning_coordinator
+
+identify_host_courses:
+  description: >
+    For EACH Host University provided in 'collect_host_data', search for their equivalent 'Software Engineering' degree.
+    Identify subjects that are semantically similar to the 'home_subjects' found in 'collect_home_data'.
+    You MUST retrieve the official course catalog link for the host degree or specific subjects.
+  expected_output: >
+    A JSON array of objects:
+    {
+      "host_uni": "Name",
+      "potential_subjects": [
+        {"name": "Host Subject Name", "credits": Int, "host_catalog_link": "URL"}
+      ]
+    }
+  agent: host_university_researcher
+  context: [collect_host_data, collect_home_data]
+
+fetch_host_syllabi:
+  description: >
+    For the list of potential host subjects identified, scrape or search for the detailed syllabus content 
+    to confirm academic equivalence (learning outcomes, objectives).
+  expected_output: >
+    A structured JSON object mapping host subject names to their 'syllabus_text', 'ects_credits', and 'topics_summary'.
+  agent: host_university_researcher
+  context: [identify_host_courses]
+
+perform_validation_matrix:
+  description: >
+    Compare 'research_home_syllabus' data with 'fetch_host_syllabi' data.
+    Create a validation match where Home Subject Content is similar to Host Subject Content (overlap > 70%) 
+    and Credits are within +/- 1 ECTS tolerance.
+    Ensure both the Home Link and Host Link are preserved in the final match object.
+  expected_output: >
+    A structured JSON list of matches. Format:
+    [
+      {
+        "home_subject": "Name",
+        "host_subject": "Name",
+        "host_uni": "Name",
+        "validation_status": "VALIDATED",
+        "justification": "Reason...",
+        "home_link": "URL",
+        "host_link": "URL"
+      }
+    ]
+  agent: subject_validation_analyst
+  context: [research_home_syllabus, fetch_host_syllabi]
+
+generate_learning_agreement:
+  description: >
+    Consolidate the validation matrix into a final, formal Learning Agreement structure. 
+    Ensure it includes a summary of total credits and is formatted clearly.
+  expected_output: >
+    A comprehensive JSON object representing the full document.
+  agent: subject_validation_analyst
+  context: [perform_validation_matrix]
+
+present_final_report:
+  description: >
+    Convert the Learning Agreement JSON into a professional, encouraging Markdown report for the student.
+    Include a clear table of the validated subjects and the links to both catalogs so the user can consult deeper.
+  expected_output: >
+    A formatted Markdown file content.
+  agent: learning_coordinator
+  context: [generate_learning_agreement]
+  output_file: "erasmus_learning_agreement.md"
