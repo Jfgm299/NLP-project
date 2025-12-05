@@ -1,6 +1,7 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
+from crewai_tools import SerperDevTool
 from typing import List
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
@@ -13,52 +14,104 @@ class Erasmusplanner():
     agents: List[BaseAgent]
     tasks: List[Task]
 
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
+    # ---------------------------------------------------------------------
+    # AGENTS
+    # ---------------------------------------------------------------------
     
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
     @agent
-    def researcher(self) -> Agent:
+    def learning_coordinator(self) -> Agent:
         return Agent(
-            config=self.agents_config['researcher'], # type: ignore[index]
+            config=self.agents_config['learning_coordinator'],
             verbose=True
         )
 
     @agent
-    def reporting_analyst(self) -> Agent:
+    def home_university_researcher(self) -> Agent:
         return Agent(
-            config=self.agents_config['reporting_analyst'], # type: ignore[index]
+            config=self.agents_config['home_university_researcher'],
+            verbose=True,
+            tools=[SerperDevTool()] # Giving this agent the ability to search the web
+        )
+
+    @agent
+    def host_university_researcher(self) -> Agent:
+        return Agent(
+            config=self.agents_config['host_university_researcher'],
+            verbose=True,
+            tools=[SerperDevTool()] # Giving this agent the ability to search the web
+        )
+
+    @agent
+    def subject_validator(self) -> Agent:
+        return Agent(
+            config=self.agents_config['subject_validator'],
             verbose=True
+            # This agent relies on context from others, so it doesn't strictly need a search tool
         )
 
-    # To learn more about structured task outputs,
-    # task dependencies, and task callbacks, check out the documentation:
-    # https://docs.crewai.com/concepts/tasks#overview-of-a-task
+    # ---------------------------------------------------------------------
+    # TASKS
+    # ---------------------------------------------------------------------
+
     @task
-    def research_task(self) -> Task:
+    def collect_home_data(self) -> Task:
         return Task(
-            config=self.tasks_config['research_task'], # type: ignore[index]
+            config=self.tasks_config['collect_home_data']
         )
 
     @task
-    def reporting_task(self) -> Task:
+    def research_home_syllabus(self) -> Task:
         return Task(
-            config=self.tasks_config['reporting_task'], # type: ignore[index]
-            output_file='report.md'
+            config=self.tasks_config['research_home_syllabus']
         )
+
+    @task
+    def collect_host_data(self) -> Task:
+        return Task(
+            config=self.tasks_config['collect_host_data']
+        )
+
+    @task
+    def identify_host_courses(self) -> Task:
+        return Task(
+            config=self.tasks_config['identify_host_courses']
+        )
+
+    @task
+    def fetch_host_syllabi(self) -> Task:
+        return Task(
+            config=self.tasks_config['fetch_host_syllabi']
+        )
+
+    @task
+    def perform_validation_matrix(self) -> Task:
+        return Task(
+            config=self.tasks_config['perform_validation_matrix']
+        )
+
+    @task
+    def generate_learning_agreement(self) -> Task:
+        return Task(
+            config=self.tasks_config['generate_learning_agreement']
+        )
+
+    @task
+    def present_final_report(self) -> Task:
+        return Task(
+            config=self.tasks_config['present_final_report'],
+            output_file='erasmus_learning_agreement.md' # Ensures the file is actually created
+        )
+
+    # ---------------------------------------------------------------------
+    # CREW DEFINITION
+    # ---------------------------------------------------------------------
 
     @crew
     def crew(self) -> Crew:
         """Creates the Erasmusplanner crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
-
         return Crew(
-            agents=self.agents, # Automatically created by the @agent decorator
-            tasks=self.tasks, # Automatically created by the @task decorator
+            agents=self.agents, # Automatically collects all @agent methods
+            tasks=self.tasks,   # Automatically collects all @task methods
             process=Process.sequential,
             verbose=True,
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )

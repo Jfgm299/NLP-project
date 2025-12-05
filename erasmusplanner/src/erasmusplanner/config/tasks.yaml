@@ -79,7 +79,7 @@ perform_validation_matrix:
         "host_link": "URL"
       }
     ]
-  agent: subject_validation_analyst
+  agent: subject_validator
   context: [research_home_syllabus, fetch_host_syllabi]
 
 generate_learning_agreement:
@@ -88,7 +88,7 @@ generate_learning_agreement:
     Ensure it includes a summary of total credits and is formatted clearly.
   expected_output: >
     A comprehensive JSON object representing the full document.
-  agent: subject_validation_analyst
+  agent: subject_validator
   context: [perform_validation_matrix]
 
 present_final_report:
