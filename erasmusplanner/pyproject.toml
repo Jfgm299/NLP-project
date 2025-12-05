@@ -1,0 +1,24 @@
+[project]
+name = "erasmusplanner"
+version = "0.1.0"
+description = "ErasmusPlanner using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]==1.6.1"
+]
+
+[project.scripts]
+erasmusplanner = "erasmusplanner.main:run"
+run_crew = "erasmusplanner.main:run"
+train = "erasmusplanner.main:train"
+replay = "erasmusplanner.main:replay"
+test = "erasmusplanner.main:test"
+run_with_trigger = "erasmusplanner.main:run_with_trigger"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
