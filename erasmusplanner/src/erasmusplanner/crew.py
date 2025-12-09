@@ -56,7 +56,8 @@ class Erasmusplanner():
     @task
     def collect_home_data(self) -> Task:
         return Task(
-            config=self.tasks_config['collect_home_data']
+            config=self.tasks_config['collect_home_data'],
+            human_input=True
         )
 
     @task
@@ -68,7 +69,8 @@ class Erasmusplanner():
     @task
     def collect_host_data(self) -> Task:
         return Task(
-            config=self.tasks_config['collect_host_data']
+            config=self.tasks_config['collect_host_data'],
+            human_input=True
         )
 
     @task
@@ -114,4 +116,5 @@ class Erasmusplanner():
             tasks=self.tasks,   # Automatically collects all @task methods
             process=Process.sequential,
             verbose=True,
+            max_rpm=3
         )
