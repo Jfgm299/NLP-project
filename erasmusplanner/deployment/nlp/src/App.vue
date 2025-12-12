@@ -3,8 +3,11 @@ import ChatInterface from './components/ChatInterface.vue'
 </script>
 
 <template>
-  <ChatInterface />
+  <div class="glass-wrapper">
+    <ChatInterface />
+  </div>
 </template>
+
 
 <style>
 /* Reset */
@@ -18,6 +21,15 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+
+  .glass-wrapper {
+    width: 100vw;
+    height: 100vh;
+    backdrop-filter: blur(15px) brightness(1.1);
+    -webkit-backdrop-filter: blur(15px) brightness(1.1);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
 
   /* === THE GRAINY PURPLE GRADIENT === */
   background-color: #4c1d95; /* Deep base */

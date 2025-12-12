@@ -72,8 +72,7 @@ const sendMessage = async () => {
     <div class="chat-card">
       <div class="chat-header">
         <div class="header-content">
-          <h1>✈️ Erasmus Planner</h1>
-          <p>Your AI study abroad assistant</p>
+          <h1>Erasmus Planner</h1>
         </div>
       </div>
 
@@ -87,7 +86,7 @@ const sendMessage = async () => {
 
           <div :class="['message-bubble', msg.role === 'user' ? 'user-msg' : 'bot-msg']">
             <div class="message-text" :style="{ whiteSpace: 'pre-wrap' }">{{ msg.content }}</div>
-             <div class="avatar user-avatar" v-if="msg.role === 'user'">👤</div>
+             
           </div>
         </div>
 
@@ -144,7 +143,7 @@ const sendMessage = async () => {
 /* The main chat card */
 .chat-card {
   width: 100%;
-  max-width: 700px; /* A bit narrower for a modern phone-like feel */
+  max-width: 90vw; /* A bit narrower for a modern phone-like feel */
   height: 100%;
   max-height: 800px;
   background: #ffffff;
@@ -259,11 +258,11 @@ const sendMessage = async () => {
 }
 
 .user-msg {
-  background: var(--primary-gradient);
-  color: var(--light-text);
-  border-bottom-right-radius: 4px; /* Little tail effect */
-  text-align: right;
+  background: #d9c6ff71; /* soft lavender purple */
+  color: var(--dark-text);
+  border-bottom-right-radius: 4px;
 }
+
 
 /* === Input Area === */
 .input-container {
