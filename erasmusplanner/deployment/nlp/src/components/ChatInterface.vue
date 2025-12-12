@@ -1,6 +1,6 @@
 <script setup>
 import { ref, nextTick, onMounted } from 'vue';
-// import axios from 'axios'; // Uncomment when backend is ready
+import axios from 'axios'; // <--- UNCOMMENTED THIS
 
 // === State ===
 const userInput = ref('');
@@ -21,7 +21,6 @@ const scrollToBottom = async () => {
   }
 };
 
-// Ensure we scroll on load
 onMounted(() => scrollToBottom());
 
 // === Send Message Functionality ===
@@ -29,37 +28,38 @@ const sendMessage = async () => {
   if (!userInput.value.trim()) return;
 
   const userMsg = userInput.value;
-  // 1. Immediately add USER message
-  messages.value.push({ role: 'user', content: userMsg });
   
-  userInput.value = ''; // Clear input
+  // 1. Add USER message immediately
+  messages.value.push({ role: 'user', content: userMsg });
+  userInput.value = ''; 
   isLoading.value = true;
   scrollToBottom();
 
   try {
     // 2. Send to Backend
-    // Ensure this URL matches your FastAPI/Flask address exactly
-    const response = await axios.post('http://127.0.0.1:8000/api/chat', {
-      message: userMsg
-    });
+    // CRITICAL CHANGE: Added timeout: 60000 (60 seconds)
+    // AI Agents are slow; standard requests timeout after 5-10s.
+    const response = await axios.post('http://127.0.0.1:8000/api/chat', 
+      { message: userMsg },
+      { timeout: 60000 } 
+    );
 
-    // 3. ROBUST DATA HANDLING
-    // APIs often return different field names. We check them all.
-    const botReply = 
-      response.data.reply || 
-      response.data.response || 
-      response.data.content || 
-      response.data.result ||
-      "I received your message, but the backend returned an empty response.";
-
+    // 3. Handle Response
+    const botReply = response.data.reply || "I finished the task but returned no text.";
     messages.value.push({ role: 'bot', content: botReply });
 
   } catch (error) {
     console.error("Backend Error:", error);
-    messages.value.push({ 
-      role: 'bot', 
-      content: "⚠️ Error: Could not connect to the CrewAI backend. Is it running on port 8000?" 
-    });
+    
+    let errorMsg = "⚠️ Error: Could not connect to backend.";
+    
+    if (error.code === 'ECONNABORTED') {
+      errorMsg = "⚠️ The agents are taking too long to respond. Try a simpler request.";
+    } else if (error.response) {
+      errorMsg = `⚠️ Server Error: ${error.response.status}`;
+    }
+
+    messages.value.push({ role: 'bot', content: errorMsg });
   } finally {
     isLoading.value = false;
     scrollToBottom();
