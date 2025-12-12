@@ -143,7 +143,7 @@ const sendMessage = async () => {
 /* The main chat card */
 .chat-card {
   width: 100%;
-  max-width: 90vw; /* A bit narrower for a modern phone-like feel */
+  max-width: 80vw; /* A bit narrower for a modern phone-like feel */
   height: 100%;
   max-height: 800px;
   background: #ffffff;
@@ -249,6 +249,9 @@ const sendMessage = async () => {
   line-height: 1.5;
   position: relative;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .bot-msg {
@@ -299,7 +302,13 @@ input {
   font-size: 1rem;
   color: var(--dark-text);
   padding: 10px 0;
+
+  /* Prevent overflow */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
+
 
 input::placeholder {
     color: #aaa;
