@@ -1,69 +1,72 @@
 <script setup>
-import { ref, nextTick, onMounted } from 'vue';
-import axios from 'axios'; // <--- UNCOMMENTED THIS
+import { ref, nextTick, onMounted } from "vue";
+import axios from "axios";
 
-// === State ===
-const userInput = ref('');
+const API_URL = "http://127.0.0.1:8000/api/chat";
+
+// --- STATE ---
+const userInput = ref("");
 const messages = ref([
-  { role: 'bot', content: '👋 Hi there! I am your Erasmus Planner AI.\n\nTell me where you want to go, or ask me about accommodation, city life, or university credits!' }
+  {
+    role: "bot",
+    content:
+      "👋 Hi there! I am your Erasmus Planner AI.\n\nTell me where you want to go or ask about your Learning Agreement."
+  }
 ]);
 const isLoading = ref(false);
 const chatContainer = ref(null);
+const conversationId = ref(null);
 
-// === Auto-scroll functionality ===
+// --- SCROLL ---
 const scrollToBottom = async () => {
   await nextTick();
   if (chatContainer.value) {
     chatContainer.value.scrollTo({
       top: chatContainer.value.scrollHeight,
-      behavior: 'smooth'
+      behavior: "smooth"
     });
   }
 };
 
-onMounted(() => scrollToBottom());
+onMounted(scrollToBottom);
 
-// === Send Message Functionality ===
+// --- SEND MESSAGE ---
 const sendMessage = async () => {
   if (!userInput.value.trim()) return;
 
   const userMsg = userInput.value;
-  
-  // 1. Add USER message immediately
-  messages.value.push({ role: 'user', content: userMsg });
-  userInput.value = ''; 
+  messages.value.push({ role: "user", content: userMsg });
+  userInput.value = "";
   isLoading.value = true;
   scrollToBottom();
 
   try {
-    // 2. Send to Backend
-    // CRITICAL CHANGE: Added timeout: 60000 (60 seconds)
-    // AI Agents are slow; standard requests timeout after 5-10s.
-    const response = await axios.post('http://127.0.0.1:8000/api/chat', 
-      { message: userMsg },
-      { timeout: 60000 } 
-    );
+    const response = await axios.post(API_URL, {
+      message: userMsg,
+      conversation_id: conversationId.value
+    });
 
-    // 3. Handle Response
-    const botReply = response.data.reply || "I finished the task but returned no text.";
-    messages.value.push({ role: 'bot', content: botReply });
+    const botReply = response.data.reply || "⚠️ No reply received.";
+    messages.value.push({ role: "bot", content: botReply });
 
-  } catch (error) {
-    console.error("Backend Error:", error);
-    
-    let errorMsg = "⚠️ Error: Could not connect to backend.";
-    
-    if (error.code === 'ECONNABORTED') {
-      errorMsg = "⚠️ The agents are taking too long to respond. Try a simpler request.";
-    } else if (error.response) {
-      errorMsg = `⚠️ Server Error: ${error.response.status}`;
+    // Store conversation id
+    conversationId.value = response.data.conversation_id;
+
+    // If awaiting human feedback, keep input enabled
+    if (response.data.awaiting_feedback) {
+      console.log("⚠️ Bot is awaiting your feedback. Type your reply to continue.");
     }
 
-    messages.value.push({ role: 'bot', content: errorMsg });
-  } finally {
-    isLoading.value = false;
-    scrollToBottom();
+  } catch (err) {
+    console.error("Backend error:", err);
+    messages.value.push({
+      role: "bot",
+      content: "⚠️ Error connecting to backend."
+    });
   }
+
+  isLoading.value = false;
+  scrollToBottom();
 };
 </script>
 

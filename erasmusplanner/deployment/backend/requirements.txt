@@ -3,3 +3,4 @@ uvicorn
 crewai
 pydantic
 python-dotenv
+crewai_tools

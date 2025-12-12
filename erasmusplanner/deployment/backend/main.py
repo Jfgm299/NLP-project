@@ -4,65 +4,88 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from typing import Optional
+import uuid
 
-# === 1. PATH SETUP ===
-# We need to add the project root to sys.path so Python can find 'src'
-current_dir = os.path.dirname(os.path.abspath(__file__)) # .../deployment/backend
-project_root = os.path.abspath(os.path.join(current_dir, "../../")) # .../
-sys.path.append(project_root)
+# === PATH SETUP ===
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, "../../"))
+src_path = os.path.join(project_root, "src")
 
-# === 2. IMPORT YOUR CREW ===
-# Now we can import the class from src/erasmusplanner/crew.py
-# Make sure your __init__.py files exist if you get import errors, 
-# but usually sys.path fix is enough.
-from src.erasmusplanner.crew import Erasmusplanner
+if src_path not in sys.path:
+    sys.path.append(src_path)
+
+# === IMPORT CREW ===
+try:
+    from erasmusplanner.crew import Erasmusplanner
+except Exception as e:
+    print("ERROR IMPORTING CREW:", e)
+    raise e
 
 load_dotenv()
 
 app = FastAPI()
 
-# === 3. CORS CONFIG ===
+# === CORS ===
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow your Vue app
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# === DATA MODELS ===
 class ChatRequest(BaseModel):
     message: str
+    conversation_id: Optional[str] = None  # Optional: reuse conversation
+
+# Store Crew instances per conversation
+CONVERSATIONS = {}
+
+@app.get("/")
+def root():
+    return {"message": "Backend running successfully!"}
 
 @app.post("/api/chat")
 async def run_chat(request: ChatRequest):
     try:
-        print(f"Received query: {request.message}")
+        user_msg = request.message
+        conv_id = request.conversation_id or str(uuid.uuid4())
 
-        # === 4. PREPARE INPUTS ===
-        # Your tasks.yaml likely uses variables like {topic} or {query}.
-        # We map the user's message to a generic 'query' or 'topic' key.
-        # Adjust these keys to match what is inside your src/erasmusplanner/config/tasks.yaml
+        # Load or create Crew instance
+        if conv_id in CONVERSATIONS:
+            crew = CONVERSATIONS[conv_id]
+        else:
+            crew_builder = Erasmusplanner()
+            crew = crew_builder.crew()
+            CONVERSATIONS[conv_id] = crew
+
+        # === Prepare inputs ===
         inputs = {
-            'topic': request.message,
-            'query': request.message,
-            'student_preferences': request.message 
+            "query": user_msg,
+            "topic": user_msg,
+            "student_preferences": user_msg
         }
 
-        # === 5. RUN THE CREW ===
-        # We instantiate the class and call .crew() to get the Crew object
-        # Then we kickoff with the inputs
-        erasmus_crew = Erasmusplanner()
-        result = erasmus_crew.crew().kickoff(inputs=inputs)
+        # Run the workflow step
+        result = crew.kickoff(inputs=inputs)
 
-        # === 6. RETURN RESULT ===
-        # CrewAI returns a 'CrewOutput' object, we convert it to string/markdown
-        return {"reply": str(result)}
+        # Detect if human feedback is required
+        awaiting_feedback = False
+        if "## HUMAN FEEDBACK" in str(result):
+            awaiting_feedback = True
+
+        return {
+            "reply": str(result),
+            "awaiting_feedback": awaiting_feedback,
+            "conversation_id": conv_id
+        }
 
     except Exception as e:
-        print(f"Error executing crew: {e}")
-        # Detailed error for debugging
+        print("Error executing crew:", e)
         raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn
-    # Using 127.0.0.1 for local dev
     uvicorn.run(app, host="127.0.0.1", port=8000)
