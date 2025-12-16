@@ -1,0 +1,20 @@
+# 🎓 Final Erasmus Validation Report
+This report provides a detailed analysis of the potential validation of home university subjects at various host universities for the Erasmus program.
+
+## 🏛️ Thomas More
+| Home Subject | Host Subject | Status | Analysis |
+| :--- | :--- | :--- | :--- |
+| Fundamentos de Programación | [Application Development](https://thomasmore.be/en/educations/degree-students/applied-computer-science/application-development/geel/full-programme) | ⚠️ | Name similarity found ('Programming' vs 'Programación'). Syllabus mentions 'application development (Python, Java)'. |
+| Sistemas Operativos | [Application Development](https://thomasmore.be/en/educations/degree-students/applied-computer-science/application-development/geel/full-programme) | ⚠️ | Syllabus mentions 'Operating Systems'. |
+
+## 🏛️ Singidunum University
+| Home Subject | Host Subject | Status | Analysis |
+| :--- | :--- | :--- | :--- |
+| Fundamentos de Programación | N/A | ❌ | No syllabus overlap or name similarity found. |
+| Sistemas Operativos | N/A | ❌ | No syllabus overlap or name similarity found. |
+
+## 🏛️ Unknown University
+| Home Subject | Host Subject | Status | Analysis |
+| :--- | :--- | :--- | :--- |
+| Fundamentos de Programación | N/A | ❌ | No syllabus overlap or name similarity found. |
+| Sistemas Operativos | N/A | ❌ | No syllabus overlap or name similarity found. |
